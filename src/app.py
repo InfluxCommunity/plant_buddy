@@ -6,7 +6,6 @@ app = Flask(__name__)
 
 @app.route("/")
 def index():
-    
     user = users.authorize_and_get_user(request)
 
     return (
@@ -19,6 +18,8 @@ def index():
 @app.route("/write", methods = ['POST'])
 def write():
     user = users.authorize_and_get_user(request)
+    print(request.data, flush=True)
+    return {'result': "OK"}, 200
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)
