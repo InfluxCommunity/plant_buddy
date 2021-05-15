@@ -2,6 +2,7 @@
 FROM python:alpine 
 
 RUN pip install flask
+RUN pip install influxdb-client
 
 COPY src /src/
 
