@@ -4,9 +4,9 @@ FROM python:alpine
 RUN pip install flask
 RUN pip install influxdb-client
 
-COPY src /src/
+COPY src /app/
 
 EXPOSE 5000
-WORKDIR /src
+WORKDIR /app
 
 ENTRYPOINT ["python", "app.py"]
