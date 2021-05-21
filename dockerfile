@@ -1,8 +1,10 @@
 # python:alpine is 3.{latest}
-FROM python:alpine 
+FROM python:buster 
 
 RUN pip install flask
 RUN pip install influxdb-client
+RUN pip install matplotlib
+RUN pip install mpld3
 
 COPY src /app/
 

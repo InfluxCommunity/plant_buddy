@@ -1,2 +1,2 @@
-def get_write_secret():
-    return "MxgVsIIe2QVdUYufxjTtUhUmt1S37Ulx8rXbID5pPgNZtRFVGBY568hw7tIpw2PqNRJxXrsagI3G8xpoVlJTlg=="
+def get_bucket_secret():
+    return "lwER6YR6YURNIvYCIDFb3A9I-D8Sr7f3CjEXI22Cc064ZGAcc18Gkof9lDVrmedresl7667jOJSsnhAB7-UFug=="
