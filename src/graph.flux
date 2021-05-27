@@ -1,4 +1,4 @@
-from(bucket: "plantbuddy")
-    |> range(start: -24h)
-    |> aggregateWindow(every: 10m, fn: mean )
+from(bucket: "downsampled")
+    |> range(start: -48h)
+    |> filter(fn: (r) => r.user == "{}" )
   

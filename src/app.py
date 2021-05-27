@@ -22,7 +22,7 @@ query_api = client.query_api()
 @app.route("/")
 def index():
     user = users.authorize_and_get_user(request)
-    query = open("graph.flux").read()
+    query = open("graph.flux").read().format(user["user_name"])
     result = query_api.query(query, org="f1d35b5f11f06a1d")
     
     fig = plt.figure()
@@ -62,6 +62,16 @@ def parse_line(line, user_name):
 
     return data
 
+
+@app.route("/notify", methods = ['POST'])
+def notify():
+    print("notify", flush=True)
+    if users.is_influx(request):
+        users.notify_user(request.data)
+        print("User Notified", flush=True)
+        return {'result': "OK"}, 200
+    else:
+        return {'result': "Authorization Error"}, 403
 
 if __name__ == '__main__':
   app.run(host='0.0.0.0', port=5000, debug=True)
