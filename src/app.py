@@ -8,11 +8,13 @@ app = Flask(__name__)
 
 sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
                 "AT":"air_temp", "SM":"soil_moisture"}
+cloud_org = "jclifford@influxdata.com"
+cloud_bucket = "plantbuddy"
 
 client = influxdb_client.InfluxDBClient(
-    url = "https://eastus-1.azure.cloud2.influxdata.com/",
+    url = "https://us-east-1-1.aws.cloud2.influxdata.com/",
     token = secret_store.get_bucket_secret(),
-    org = "f1d35b5f11f06a1d"
+    org = cloud_org
 )
 
 write_api = client.write_api()
@@ -22,7 +24,7 @@ query_api = client.query_api()
 def index():
     user = users.authorize_and_get_user(request)
     query = open("graph.flux").read().format(user["user_name"])
-    result = query_api.query(query, org="f1d35b5f11f06a1d")
+    result = query_api.query(query, org=cloud_org)
     
     fig = plt.figure()
     for table in result:
@@ -50,7 +52,7 @@ def write():
 
 def write_to_influx(data):
     p = influxdb_client.Point(data["sensor_name"]).tag("user",data["user"]).tag("device_id",data["device"]).field("reading", int(data["value"]))
-    write_api.write(bucket="plantbuddy", org="f1d35b5f11f06a1d", record=p)
+    write_api.write(bucket=cloud_bucket, org=cloud_org, record=p)
     print(p, flush=True)
 
 def parse_line(line, user_name):
