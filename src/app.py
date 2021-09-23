@@ -8,7 +8,7 @@ app = Flask(__name__)
 
 sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
                 "AT":"air_temp", "SM":"soil_moisture"}
-cloud_org = "jclifford@influxdata.com"
+cloud_org = "05ea551cd21fb6e4"
 cloud_bucket = "plantbuddy"
 
 client = influxdb_client.InfluxDBClient(
