@@ -1,10 +1,19 @@
 from flask import Flask, request, render_template
-import matplotlib.pyplot as plt, mpld3
+import time
 import users
 import secret_store
 import influxdb_client
+import dash
+import dash_bootstrap_components as dbc
+import dash_core_components as dcc
+import dash_html_components as html
+from dash.dependencies import Input, Output
+import plotly.express as px
+import pandas as pd
+import plotly.graph_objects as go
 
-app = Flask(__name__)
+server = Flask(__name__)
+app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
                 "AT":"air_temp", "SM":"soil_moisture"}
@@ -20,30 +29,95 @@ client = influxdb_client.InfluxDBClient(
 write_api = client.write_api()
 query_api = client.query_api()
 
-@app.route("/")
-def index():
-    user = users.authorize_and_get_user(request)
-    query = open("graph.flux").read().format(user["user_name"])
-    result = query_api.query(query, org=cloud_org)
-    
-    fig = plt.figure()
-    for table in result:
-        x_vals = []
-        y_vals = []
-        label = ""
-        for record in table:
-            y_vals.append(record["_value"])
-            x_vals.append(record["_time"])
-            label = record["_measurement"]
-        plt.plot(x_vals, y_vals, label=label)
 
-    plt.legend()
-    grph = mpld3.fig_to_html(fig)
-    return render_template("home.html", 
-                            user_name = user["user_name"],
-                            graph_code = grph)
+user = users.authorize_and_get_user(request)
 
-@app.route("/write", methods = ['POST'])
+
+#fig = px.line(df, x="time", y="value", title='Soil Moisture')
+
+app.layout = dbc.Container(
+    [
+        dcc.Store(id="store"),
+        html.H1("Dynamically rendered tab content"),
+        html.Hr(),
+        dbc.Button(
+            "Regenerate graphs",
+            color="primary",
+            block=True,
+            id="button",
+            className="mb-3",
+        ),
+        dbc.Tabs(
+            [
+                dbc.Tab(label="Scatter", tab_id="scatter"),
+                dbc.Tab(label="Histograms", tab_id="histogram"),
+            ],
+            id="tabs",
+            active_tab="scatter",
+        ),
+        html.Div(id="tab-content", className="p-4"),
+    ]
+)
+
+@app.callback(
+    Output("tab-content", "children"),
+    [Input("tabs", "active_tab"), Input("store", "data")],
+)
+def render_tab_content(active_tab, data):
+    """
+    This callback takes the 'active_tab' property as input, as well as the
+    stored graphs, and renders the tab content depending on what the value of
+    'active_tab' is.
+    """
+    if active_tab and data is not None:
+        if active_tab == "scatter":
+            return dcc.Graph(figure=data["scatter"])
+        elif active_tab == "histogram":
+            return dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(figure=data["hist_1"]), width=6),
+                    dbc.Col(dcc.Graph(figure=data["hist_2"]), width=6),
+                ]
+            )
+    return "No tab selected"
+
+
+
+@app.callback(Output("store", "data"), [Input("button", "n_clicks")])
+def generate_graphs(n):
+     query = open("/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/graph.flux").read().format(user["user_name"])
+     result = query_api.query(query, org=cloud_org)
+     for table in result:
+            x_vals = []
+            y_vals = []
+            label = ""
+            for record in table:
+                y_vals.append(record["_value"])
+                x_vals.append(record["_time"])
+                label = record["_measurement"]
+     df = pd.DataFrame({
+        "time": x_vals,
+        "value": y_vals,
+            })
+
+     scatter = px.line(df, x="time", y="value", title='Soil Moisture')
+  #  scatter = go.Scatter(df)
+
+     hist_1 = px.line(df, x="time", y="value", title='Soil Moisture')
+
+
+     hist_2 = px.line(df, x="time", y="value", title='Soil Moisture')
+
+
+    # save figures in a dictionary for sending to the dcc.Store
+     return {"scatter": scatter, "hist_1": hist_1, "hist_2": hist_2}
+
+
+
+
+
+
+@server.route("/write", methods = ['POST'])
 def write():
     user = users.authorize_and_get_user(request)
     d = parse_line(request.data.decode("UTF-8"), user["user_name"])
@@ -62,7 +136,7 @@ def parse_line(line, user_name):
             "user": user_name}
     return data
 
-@app.route("/notify", methods = ['POST'])
+@server.route("/notify", methods = ['POST'])
 def notify():
     print("notification received", flush=True)
     print(request.data, flush=True)
@@ -70,4 +144,4 @@ def notify():
     # TODO: check the authorization and actually notify the user
 
 if __name__ == '__main__':
-  app.run(host='0.0.0.0', port=5000, debug=True)
+  app.run_server(host='0.0.0.0', port=5000, debug=True)

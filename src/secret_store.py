@@ -1,3 +1,3 @@
 
 def get_bucket_secret():
-    return ""
+    return "q_VazhzLXu7YNYRxhYhzqfymmTIV8WhSWPqBpuKAVdPJceSFUwfmYrUOjG916Fl9Pm1H42tkgl1scKIBKf2irw=="
