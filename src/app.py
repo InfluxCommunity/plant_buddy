@@ -38,7 +38,7 @@ user = users.authorize_and_get_user(request)
 app.layout = dbc.Container(
     [
         dcc.Store(id="store"),
-        html.H1("Dynamically rendered tab content"),
+        html.H1("Plant Buddy Dashboard"),
         html.Hr(),
         dbc.Button(
             "Regenerate graphs",
@@ -49,11 +49,12 @@ app.layout = dbc.Container(
         ),
         dbc.Tabs(
             [
-                dbc.Tab(label="Scatter", tab_id="scatter"),
-                dbc.Tab(label="Histograms", tab_id="histogram"),
+                dbc.Tab(label="Soil Moisture", tab_id="soil_moisture"),
+                dbc.Tab(label="Soil and Room Temperature", tab_id="temperature"),
+                dbc.Tab(label="Room Humidity and Light", tab_id="hum_and_light"),
             ],
             id="tabs",
-            active_tab="scatter",
+            active_tab="soil_moisture",
         ),
         html.Div(id="tab-content", className="p-4"),
     ]
@@ -70,13 +71,20 @@ def render_tab_content(active_tab, data):
     'active_tab' is.
     """
     if active_tab and data is not None:
-        if active_tab == "scatter":
-            return dcc.Graph(figure=data["scatter"])
-        elif active_tab == "histogram":
+        if active_tab == "soil_moisture":
+            return dcc.Graph(figure=data["soil_moisture"])
+        elif active_tab == "temperature":
             return dbc.Row(
                 [
-                    dbc.Col(dcc.Graph(figure=data["hist_1"]), width=6),
-                    dbc.Col(dcc.Graph(figure=data["hist_2"]), width=6),
+                    dbc.Col(dcc.Graph(figure=data["soil_temp_graph"]), width=6),
+                    dbc.Col(dcc.Graph(figure=data["air_temp_graph"]), width=6),
+                ]
+            )
+        elif active_tab == "hum_and_light":
+            return dbc.Row(
+                [
+                    dbc.Col(dcc.Graph(figure=data["humidity_graph"]), width=6),
+                    dbc.Col(dcc.Graph(figure=data["light_graph"]), width=6),
                 ]
             )
     return "No tab selected"
@@ -85,32 +93,30 @@ def render_tab_content(active_tab, data):
 
 @app.callback(Output("store", "data"), [Input("button", "n_clicks")])
 def generate_graphs(n):
-     query = open("/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/graph.flux").read().format(user["user_name"])
-     result = query_api.query(query, org=cloud_org)
-     for table in result:
-            x_vals = []
-            y_vals = []
-            label = ""
-            for record in table:
-                y_vals.append(record["_value"])
-                x_vals.append(record["_time"])
-                label = record["_measurement"]
-     df = pd.DataFrame({
-        "time": x_vals,
-        "value": y_vals,
-            })
 
-     scatter = px.line(df, x="time", y="value", title='Soil Moisture')
-  #  scatter = go.Scatter(df)
+    df = querydata("downsampled", "soil_moisture", "jay" )
+    soil_moisture = px.line(df, x="time", y="value", title= df.iloc[1]['label'])
+  #  soil_moisture = go.soil_moisture(df)
 
-     hist_1 = px.line(df, x="time", y="value", title='Soil Moisture')
+    df = querydata("downsampled", "soil_temp", "jay" )
+    soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[1]['label'])
 
+    df = querydata("downsampled", "air_temp", "jay" )
+    air_temp_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
 
-     hist_2 = px.line(df, x="time", y="value", title='Soil Moisture')
+    df = querydata("downsampled", "humidity", "jay" )
+    humidity_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
 
+    df = querydata("downsampled", "light", "jay" )
+    light_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
 
     # save figures in a dictionary for sending to the dcc.Store
-     return {"scatter": scatter, "hist_1": hist_1, "hist_2": hist_2}
+    return {"soil_moisture": soil_moisture, 
+            "soil_temp_graph": soil_temp_graph, 
+            "air_temp_graph": air_temp_graph, 
+            "humidity_graph": humidity_graph, 
+            "light_graph": light_graph
+            }
 
 
 
@@ -135,6 +141,24 @@ def parse_line(line, user_name):
             "value" : line[4:],
             "user": user_name}
     return data
+
+def querydata(bucket, measurment, field):
+    query = open("/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/graph.flux").read().format(bucket, measurment, field)
+    result = query_api.query(query, org=cloud_org)
+    for table in result:
+            x_vals = []
+            y_vals = []
+            label = []
+            for record in table:
+                y_vals.append(record["_value"])
+                x_vals.append(record["_time"])
+                label = record["_measurement"]
+    df = pd.DataFrame({
+        "time": x_vals,
+        "value": y_vals,
+        "label": label
+            })
+    return df
 
 @server.route("/notify", methods = ['POST'])
 def notify():
