@@ -1,3 +1,7 @@
-
+import json
 def get_bucket_secret():
-    return "q_VazhzLXu7YNYRxhYhzqfymmTIV8WhSWPqBpuKAVdPJceSFUwfmYrUOjG916Fl9Pm1H42tkgl1scKIBKf2irw=="
+    # JSON file
+    f = open ('/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/secret/token.json', "r")
+    dict = json.loads(f.read())
+
+    return dict["token"]
