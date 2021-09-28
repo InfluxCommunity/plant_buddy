@@ -1,5 +1,7 @@
-from flask import Flask, request, render_template
+from flask import Flask, request
 import time
+
+from pandas.core.frame import DataFrame
 import users
 import secret_store
 import influxdb_client
@@ -10,13 +12,16 @@ import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
 import pandas as pd
-import plotly.graph_objects as go
+
 
 server = Flask(__name__)
+# Dashboard is built using plotly's dash package. This also includes bootstap styles from dash_bootstrap
 app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
+# Ref to serial sensor samples. 
 sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
                 "AT":"air_temp", "SM":"soil_moisture"}
+
 cloud_org = "05ea551cd21fb6e4"
 cloud_bucket = "plantbuddy"
 
@@ -29,12 +34,13 @@ client = influxdb_client.InfluxDBClient(
 write_api = client.write_api()
 query_api = client.query_api()
 
-
+# Get user. Currently static refrence. Used to filter sensor data in InfluxDB
+# TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
 
 
-#fig = px.line(df, x="time", y="value", title='Soil Moisture')
 
+# Main HTML / Bootstap structure for front end app
 app.layout = dbc.Container(
     [
         dcc.Store(id="store"),
@@ -47,6 +53,7 @@ app.layout = dbc.Container(
             id="button",
             className="mb-3",
         ),
+        # Add your new tabs hear.
         dbc.Tabs(
             [
                 dbc.Tab(label="Soil Moisture", tab_id="soil_moisture"),
@@ -93,22 +100,21 @@ def render_tab_content(active_tab, data):
 
 @app.callback(Output("store", "data"), [Input("button", "n_clicks")])
 def generate_graphs(n):
+# Generate graphs based upon pandas data frame. 
+    df = querydata("plantbuddy", "soil_moisture", "jay" )
+    soil_moisture = px.line(df, x="time", y="value", title= df.iloc[0]['label'])
 
-    df = querydata("downsampled", "soil_moisture", "jay" )
-    soil_moisture = px.line(df, x="time", y="value", title= df.iloc[1]['label'])
-  #  soil_moisture = go.soil_moisture(df)
+    df = querydata("plantbuddy", "soil_temp", "jay" )
+    soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("downsampled", "soil_temp", "jay" )
-    soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[1]['label'])
+    df = querydata("plantbuddy", "air_temp", "jay" )
+    air_temp_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("downsampled", "air_temp", "jay" )
-    air_temp_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
+    df = querydata("plantbuddy", "humidity", "jay" )
+    humidity_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("downsampled", "humidity", "jay" )
-    humidity_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
-
-    df = querydata("downsampled", "light", "jay" )
-    light_graph= px.line(df, x="time", y="value", title=df.iloc[1]['label'])
+    df = querydata("plantbuddy", "light", "jay" )
+    light_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
     # save figures in a dictionary for sending to the dcc.Store
     return {"soil_moisture": soil_moisture, 
@@ -122,7 +128,7 @@ def generate_graphs(n):
 
 
 
-
+# Server call used to write sensor data to InfluxDB
 @server.route("/write", methods = ['POST'])
 def write():
     user = users.authorize_and_get_user(request)
@@ -141,14 +147,15 @@ def parse_line(line, user_name):
             "value" : line[4:],
             "user": user_name}
     return data
-
-def querydata(bucket, measurment, field):
+#####################
+# Wrapper function used to query InfluxDB> Calls Flux scrip with paramaters. Data query to data frame.
+def querydata(bucket, measurment, field) -> DataFrame:
+    x_vals = []
+    y_vals = []
+    label = []
     query = open("/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/graph.flux").read().format(bucket, measurment, field)
     result = query_api.query(query, org=cloud_org)
     for table in result:
-            x_vals = []
-            y_vals = []
-            label = []
             for record in table:
                 y_vals.append(record["_value"])
                 x_vals.append(record["_time"])
@@ -158,6 +165,7 @@ def querydata(bucket, measurment, field):
         "value": y_vals,
         "label": label
             })
+    print(df)
     return df
 
 @server.route("/notify", methods = ['POST'])
