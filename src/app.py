@@ -2,42 +2,64 @@ from flask import Flask, request
 import time
 
 from pandas.core.frame import DataFrame
+import pandas as pd
 import users
-import secret_store
-import influxdb_client
 import dash
 import dash_bootstrap_components as dbc
 import dash_core_components as dcc
 import dash_html_components as html
 from dash.dependencies import Input, Output
 import plotly.express as px
-import pandas as pd
+
+from influx_helper import influxHelper
+
 
 
 server = Flask(__name__)
 # Dashboard is built using plotly's dash package. This also includes bootstap styles from dash_bootstrap
-app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP])
-
-# Ref to serial sensor samples. 
-sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
-                "AT":"air_temp", "SM":"soil_moisture"}
+app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 
 cloud_org = "05ea551cd21fb6e4"
 cloud_bucket = "plantbuddy"
+graph_default = {"measurment":"soil_moisture", "bucket": cloud_bucket}
 
-client = influxdb_client.InfluxDBClient(
-    url = "https://us-east-1-1.aws.cloud2.influxdata.com/",
-    token = secret_store.get_bucket_secret(),
-    org = cloud_org
-)
+influx = influxHelper(cloud_org, cloud_bucket)
 
-write_api = client.write_api()
-query_api = client.query_api()
 
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
-
+forumMea= influx.getMeasurements(cloud_bucket)
+forumBuckets = influx.getBuckets()
+controls = dbc.Card(
+    [
+        dbc.FormGroup(
+            [
+                dbc.Label("Measurment"),
+                dcc.Dropdown(
+                    id="y-variable",
+                    options=[
+                        {"label": col, "value": col} for col in forumMea
+                    ],
+                    value=graph_default["measurment"],
+                ),
+            ]
+        ),
+        dbc.FormGroup(
+            [
+                dbc.Label("Bucket"),
+                dcc.Dropdown(
+                    id="bucket",
+                    options=[
+                        {"label": col, "value": col} for col in forumBuckets
+                    ],
+                    value=graph_default["bucket"],
+                ),
+            ]
+        ),
+    ],
+    body=True,
+)
 
 
 # Main HTML / Bootstap structure for front end app
@@ -79,7 +101,12 @@ def render_tab_content(active_tab, data):
     """
     if active_tab and data is not None:
         if active_tab == "soil_moisture":
-            return dcc.Graph(figure=data["soil_moisture"])
+            return dbc.Row(
+                [
+                dbc.Col(controls, md=4),
+                dbc.Col(dcc.Graph(figure=data["soil_moisture"]), md=8),
+                ]
+            )
         elif active_tab == "temperature":
             return dbc.Row(
                 [
@@ -101,19 +128,19 @@ def render_tab_content(active_tab, data):
 @app.callback(Output("store", "data"), [Input("button", "n_clicks")])
 def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
-    df = querydata("plantbuddy", "soil_moisture", "jay" )
+    df = influx.querydata(graph_default["bucket"], graph_default["measurment"], "jay" )
     soil_moisture = px.line(df, x="time", y="value", title= df.iloc[0]['label'])
 
-    df = querydata("plantbuddy", "soil_temp", "jay" )
+    df = influx.querydata("plantbuddy", "soil_temp", "jay" )
     soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("plantbuddy", "air_temp", "jay" )
+    df = influx.querydata("plantbuddy", "air_temp", "jay" )
     air_temp_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("plantbuddy", "humidity", "jay" )
+    df = influx.querydata("plantbuddy", "humidity", "jay" )
     humidity_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
-    df = querydata("plantbuddy", "light", "jay" )
+    df = influx.querydata("plantbuddy", "light", "jay" )
     light_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
     # save figures in a dictionary for sending to the dcc.Store
@@ -125,6 +152,13 @@ def generate_graphs(n):
             }
 
 
+@app.callback(Output("y-variable", "value"), [Input("y-variable", "value"), Input("bucket", "value")], prevent_initial_call=True)
+def updateForumData(y, b):
+    graph_default["bucket"] = b
+    graph_default["measurment"] = y
+    return y
+
+
 
 
 
@@ -132,41 +166,11 @@ def generate_graphs(n):
 @server.route("/write", methods = ['POST'])
 def write():
     user = users.authorize_and_get_user(request)
-    d = parse_line(request.data.decode("UTF-8"), user["user_name"])
-    write_to_influx(d)
+    d = influx.parse_line(request.data.decode("UTF-8"), user["user_name"])
+    influx.write_to_influx(d)
     return {'result': "OK"}, 200
 
-def write_to_influx(data):
-    p = influxdb_client.Point(data["sensor_name"]).tag("user",data["user"]).tag("device_id",data["device"]).field("reading", int(data["value"]))
-    write_api.write(bucket=cloud_bucket, org=cloud_org, record=p)
-    print(p, flush=True)
 
-def parse_line(line, user_name):
-    data = {"device" : line[:2],
-            "sensor_name" : sensor_names.get(line[2:4], "unkown"),
-            "value" : line[4:],
-            "user": user_name}
-    return data
-#####################
-# Wrapper function used to query InfluxDB> Calls Flux scrip with paramaters. Data query to data frame.
-def querydata(bucket, measurment, field) -> DataFrame:
-    x_vals = []
-    y_vals = []
-    label = []
-    query = open("/Users/jayclifford/Documents/repos/IoT_Plant_Demo/plant-buddy/src/graph.flux").read().format(bucket, measurment, field)
-    result = query_api.query(query, org=cloud_org)
-    for table in result:
-            for record in table:
-                y_vals.append(record["_value"])
-                x_vals.append(record["_time"])
-                label = record["_measurement"]
-    df = pd.DataFrame({
-        "time": x_vals,
-        "value": y_vals,
-        "label": label
-            })
-    print(df)
-    return df
 
 @server.route("/notify", methods = ['POST'])
 def notify():
