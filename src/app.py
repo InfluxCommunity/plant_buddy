@@ -1,16 +1,11 @@
 from flask import Flask, request
-import time
-
-from pandas.core.frame import DataFrame
-import pandas as pd
 import users
 import dash
 import dash_bootstrap_components as dbc
-import dash_core_components as dcc
-import dash_html_components as html
+from dash import dcc
+from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
-
 from influx_helper import influxHelper
 import nav
 
@@ -42,7 +37,7 @@ controls = dbc.Card(
                     options=[
                         {"label": col, "value": col} for col in forumMea
                     ],
-                    value=graph_default["measurment"],
+                    value="Select a measurment",
                 ),
       
 
@@ -96,7 +91,7 @@ def render_tab_content(active_tab, data):
             return dbc.Row(
                 [
                 dbc.Col(controls, md=4),
-                dbc.Col(dcc.Graph(figure=data["data_explorer"]), md=8),
+                dbc.Col( dbc.Card([dcc.Graph(figure=data["data_explorer"])],style={"width": "auto"}), md=8),
                 ]
             )
         elif active_tab == "temperature":

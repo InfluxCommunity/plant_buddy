@@ -8,7 +8,8 @@ class influxHelper:
         self.client = influxdb_client.InfluxDBClient(
             url = "https://us-east-1-1.aws.cloud2.influxdata.com/",
             token = secret_store.get_bucket_secret(),
-            org = org
+            org = org,
+            timeout = 30000
     )
 
     
