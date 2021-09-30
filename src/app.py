@@ -12,7 +12,7 @@ from dash.dependencies import Input, Output
 import plotly.express as px
 
 from influx_helper import influxHelper
-
+import nav
 
 
 server = Flask(__name__)
@@ -31,10 +31,11 @@ influx = influxHelper(cloud_org, cloud_bucket)
 user = users.authorize_and_get_user(request)
 forumMea= influx.getMeasurements(cloud_bucket)
 forumBuckets = influx.getBuckets()
+
+# Creates a drop down forum which queries influx for both a list of buckets and fields
 controls = dbc.Card(
     [
-        dbc.FormGroup(
-            [
+
                 dbc.Label("Measurment"),
                 dcc.Dropdown(
                     id="y-variable",
@@ -43,10 +44,8 @@ controls = dbc.Card(
                     ],
                     value=graph_default["measurment"],
                 ),
-            ]
-        ),
-        dbc.FormGroup(
-            [
+      
+
                 dbc.Label("Bucket"),
                 dcc.Dropdown(
                     id="bucket",
@@ -55,35 +54,28 @@ controls = dbc.Card(
                     ],
                     value=graph_default["bucket"],
                 ),
-            ]
-        ),
+   
     ],
     body=True,
 )
 
-
+sidebar = nav.createNav()
 # Main HTML / Bootstap structure for front end app
 app.layout = dbc.Container(
     [
+        sidebar,
         dcc.Store(id="store"),
         html.H1("Plant Buddy Dashboard"),
         html.Hr(),
-        dbc.Button(
-            "Regenerate graphs",
-            color="primary",
-            block=True,
-            id="button",
-            className="mb-3",
-        ),
         # Add your new tabs hear.
         dbc.Tabs(
             [
-                dbc.Tab(label="Soil Moisture", tab_id="soil_moisture"),
+                dbc.Tab(label="Data Explorer", tab_id="data_explorer"),
                 dbc.Tab(label="Soil and Room Temperature", tab_id="temperature"),
                 dbc.Tab(label="Room Humidity and Light", tab_id="hum_and_light"),
             ],
             id="tabs",
-            active_tab="soil_moisture",
+            active_tab="data_explorer",
         ),
         html.Div(id="tab-content", className="p-4"),
     ]
@@ -100,25 +92,26 @@ def render_tab_content(active_tab, data):
     'active_tab' is.
     """
     if active_tab and data is not None:
-        if active_tab == "soil_moisture":
+        if active_tab == "data_explorer":
             return dbc.Row(
                 [
                 dbc.Col(controls, md=4),
-                dbc.Col(dcc.Graph(figure=data["soil_moisture"]), md=8),
+                dbc.Col(dcc.Graph(figure=data["data_explorer"]), md=8),
                 ]
             )
         elif active_tab == "temperature":
             return dbc.Row(
                 [
-                    dbc.Col(dcc.Graph(figure=data["soil_temp_graph"]), width=6),
-                    dbc.Col(dcc.Graph(figure=data["air_temp_graph"]), width=6),
+                   dbc.Col( dbc.Card([dcc.Graph(figure=data["soil_temp_graph"])],style={"width": "auto"}), md=6),
+                    dbc.Col( dbc.Card([dcc.Graph(figure=data["air_temp_graph"])],style={"width": "auto"}), md=6),
+     
                 ]
             )
         elif active_tab == "hum_and_light":
             return dbc.Row(
-                [
-                    dbc.Col(dcc.Graph(figure=data["humidity_graph"]), width=6),
-                    dbc.Col(dcc.Graph(figure=data["light_graph"]), width=6),
+                [   
+                    dbc.Col( dbc.Card([dcc.Graph(figure=data["humidity_graph"])],style={"width": "auto"}), md=6),
+                    dbc.Col( dbc.Card([dcc.Graph(figure=data["light_graph"])],style={"width": "auto"}), md=6),
                 ]
             )
     return "No tab selected"
@@ -129,7 +122,7 @@ def render_tab_content(active_tab, data):
 def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
     df = influx.querydata(graph_default["bucket"], graph_default["measurment"], "jay" )
-    soil_moisture = px.line(df, x="time", y="value", title= df.iloc[0]['label'])
+    data_explorer = px.line(df, x="time", y="value", title= df.iloc[0]['label'])
 
     df = influx.querydata("plantbuddy", "soil_temp", "jay" )
     soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[0]['label'])
@@ -144,7 +137,7 @@ def generate_graphs(n):
     light_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
 
     # save figures in a dictionary for sending to the dcc.Store
-    return {"soil_moisture": soil_moisture, 
+    return {"data_explorer": data_explorer, 
             "soil_temp_graph": soil_temp_graph, 
             "air_temp_graph": air_temp_graph, 
             "humidity_graph": humidity_graph, 
@@ -152,6 +145,7 @@ def generate_graphs(n):
             }
 
 
+# Updates inital graphs default query variables (measurment and bucket)
 @app.callback(Output("y-variable", "value"), [Input("y-variable", "value"), Input("bucket", "value")], prevent_initial_call=True)
 def updateForumData(y, b):
     graph_default["bucket"] = b
