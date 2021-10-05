@@ -10,7 +10,7 @@ ok = (r) => r.reading > 35
 crit = (r) => r.reading <= 35
 messageFn = (r) => "soil moisture at ${string(v: r.reading)} for ${r.user}"
 check = {
-    _check_id: "check1xxxxxxxxxx",
+    _check_id: "check1moisture",
     _check_name: "soil moisture check",
     _type: "threshold",
     tags: {},

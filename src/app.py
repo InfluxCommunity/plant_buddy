@@ -21,6 +21,7 @@ graph_default = {"measurment":"soil_moisture", "bucket": cloud_bucket}
 influx = influxHelper(cloud_org, cloud_bucket)
 
 
+
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
@@ -117,19 +118,22 @@ def render_tab_content(active_tab, data):
 def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
     df = influx.querydata(graph_default["bucket"], graph_default["measurment"], "jay" )
-    data_explorer = px.line(df, x="time", y="value", title= df.iloc[0]['label'])
+    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_measurement'])
 
-    df = influx.querydata("plantbuddy", "soil_temp", "jay" )
-    soil_temp_graph = px.line(df, x="time", y="value", title=df.iloc[0]['label'])
+    df = influx.querydata(cloud_bucket, "soil_temp", "jay" )
+    soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
 
-    df = influx.querydata("plantbuddy", "air_temp", "jay" )
-    air_temp_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
+    df = influx.querydata(cloud_bucket, "air_temp", "jay" )
+    air_temp_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
 
-    df = influx.querydata("plantbuddy", "humidity", "jay" )
-    humidity_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
+    df = influx.querydata(cloud_bucket, "humidity", "jay" )
+    humidity_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
 
-    df = influx.querydata("plantbuddy", "light", "jay" )
-    light_graph= px.line(df, x="time", y="value", title=df.iloc[0]['label'])
+    #TODO Part of demo (Part-4) we will add this in
+    df = influx.querydataStatic()
+    #df = influx.querydata(cloud_bucket, "light", "jay" )
+    light_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    ########
 
     # save figures in a dictionary for sending to the dcc.Store
     return {"data_explorer": data_explorer, 

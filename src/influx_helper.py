@@ -65,19 +65,15 @@ class influxHelper:
 
     # Wrapper function used to query InfluxDB> Calls Flux scrip with paramaters. Data query to data frame.
     def querydata(self, bucket, measurment, field) -> DataFrame:
-        x_vals = []
-        y_vals = []
-        label = []
         query = open("../flux/graph.flux").read().format(bucket, measurment, field)
-        result = self.query_api.query(query, org=self.cloud_org)
-        for table in result:
-                for record in table:
-                    y_vals.append(record["_value"])
-                    x_vals.append(record["_time"])
-                    label = record["_measurement"]
-        df = pd.DataFrame({
-            "time": x_vals,
-            "value": y_vals,
-            "label": label
-                })
-        return df
+        result = self.query_api.query_data_frame(query, org=self.cloud_org)
+
+
+        return result
+    
+    def querydataStatic(self) -> DataFrame:
+        query = open("../flux/graph_static.flux").read()
+        result = self.query_api.query_data_frame(query, org=self.cloud_org)
+
+
+        return result

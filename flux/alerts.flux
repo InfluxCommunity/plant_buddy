@@ -1,0 +1,7 @@
+from(bucket: "_monitoring")
+  |> range(start: -60m) 
+  |> filter(fn: (r) => r["_measurement"] == "statuses")
+  |> filter(fn: (r) => r["_check_id"] == "check2light")
+  |> filter(fn: (r) => r["_check_name"] == "light check")
+  |> filter(fn: (r) => r["_field"] == "reading")
+  |> last()
