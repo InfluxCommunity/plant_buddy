@@ -56,7 +56,7 @@ controls = dbc.Card(
 )
 
 sidebar = nav.createNav()
-TAB_STYLE = {
+MAIN_STYLE = {
     "margin-left": "4rem",
     "margin-right": "2rem",
     "padding": "2rem 2rem 2rem 8rem",
@@ -80,7 +80,7 @@ app.layout = dbc.Container(
             id="tabs",
             active_tab="data_explorer",
         ),
-        html.Div(id="tab-content", className="p-4"),], style=TAB_STYLE)
+        html.Div(id="tab-content", className="p-4"),], style=MAIN_STYLE)
     ]
 )
 
