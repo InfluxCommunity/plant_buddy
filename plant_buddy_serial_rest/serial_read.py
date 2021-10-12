@@ -5,7 +5,7 @@ import http.client
 import json
 
 connected = False
-port = '/dev/tty.usbmodem143301'
+port = '/dev/tty.usbmodem143201'
 baudrate = 9600 
 conn = http.client.HTTPConnection('localhost:5000')
 

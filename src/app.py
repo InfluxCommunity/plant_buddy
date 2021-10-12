@@ -56,10 +56,17 @@ controls = dbc.Card(
 )
 
 sidebar = nav.createNav()
+TAB_STYLE = {
+    "margin-left": "4rem",
+    "margin-right": "2rem",
+    "padding": "2rem 2rem 2rem 8rem",
+    }
+
 # Main HTML / Bootstap structure for front end app
 app.layout = dbc.Container(
     [
         sidebar,
+        dbc.Container([
         dcc.Store(id="store"),
         html.H1("Plant Buddy Dashboard"),
         html.Hr(),
@@ -73,7 +80,7 @@ app.layout = dbc.Container(
             id="tabs",
             active_tab="data_explorer",
         ),
-        html.Div(id="tab-content", className="p-4"),
+        html.Div(id="tab-content", className="p-4"),], style=TAB_STYLE)
     ]
 )
 
