@@ -20,7 +20,7 @@ or
 - [DH11 Temperature Humidity Sensor](https://create.arduino.cc/projecthub/pibots555/how-to-connect-dht11-sensor-with-arduino-uno-f4d239)
 
 ### Hardware Wiring
-![Plant_Buddy_bb](https://user-images.githubusercontent.com/45856600/135635429-c97d0046-59aa-4b10-b727-d2e2884fef19.png)
+![Plant_Buddy_bb](plant_buddy/microcontroller/plant_buddy_arduino.png)
 
 
 ## Setup
