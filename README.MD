@@ -24,7 +24,37 @@ or
 
 
 ## Setup
+When setting up the project you will need to add a secret folder in src and add your token in a token.json file like so:
+```
+{"token":"imatokensupersecret"}
+```
 
+You will want to edit the line in secret_store.py:
+```
+f = open ('/myfilestructure/plant-buddy/src/secret/token.json', "r")
+```
+You might need to change the port in serial_read.py depending on the device you are using:
+```
+port = '/dev/tty.usbmodem141101'
+```
+
+in app.py you will want to add your own org and bucket:
+```
+cloud_org = "yourorgid"
+cloud_bucket = "yourbucket"
+```
+
+To run the project you want to run from the src file:
+```
+python3 app.py
+```
+
+
+## Troubleshooting
+
+<img width="999" alt="Screen Shot 2022-01-13 at 10 18 28 AM" src="https://user-images.githubusercontent.com/6667389/149377837-ed3ae5c9-11e4-4a37-981a-bbd4393b9651.png">
+
+This probably indicates that your data is not being loaded in from the IOT side. 
 
 
 ## Contributing
