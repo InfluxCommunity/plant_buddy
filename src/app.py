@@ -7,7 +7,7 @@ from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
 from influx_helper import influxHelper
-import nav
+import main_html
 
 
 server = Flask(__name__)
@@ -20,8 +20,6 @@ graph_default = {"measurment":"soil_moisture", "bucket": cloud_bucket}
 
 influx = influxHelper(cloud_org, cloud_bucket)
 
-
-
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
@@ -29,104 +27,23 @@ forumMea= influx.getMeasurements(cloud_bucket)
 forumBuckets = influx.getBuckets()
 
 # Creates a drop down forum which queries influx for both a list of buckets and fields
-controls = dbc.Card(
-    [
-
-                dbc.Label("Measurment"),
-                dcc.Dropdown(
-                    id="y-variable",
-                    options=[
-                        {"label": col, "value": col} for col in forumMea
-                    ],
-                    value="Select a measurment",
-                ),
-      
-
-                dbc.Label("Bucket"),
-                dcc.Dropdown(
-                    id="bucket",
-                    options=[
-                        {"label": col, "value": col} for col in forumBuckets
-                    ],
-                    value=graph_default["bucket"],
-                ),
-   
-    ],
-    body=True,
-)
-
-sidebar = nav.createNav()
-MAIN_STYLE = {
-    "margin-left": "4rem",
-    "margin-right": "2rem",
-    "padding": "2rem 2rem 2rem 8rem",
-    }
-
+controls = main_html.controls(forumMea,forumBuckets, graph_default)
+sidebar = main_html.createNav()
 # Main HTML / Bootstap structure for front end app
-app.layout = dbc.Container(
-    [
-        sidebar,
-        dbc.Container([
-        dcc.Store(id="store"),
-        html.H1("Plant Buddy Dashboard"),
-        html.Hr(),
-        # Add your new tabs hear.
-        dbc.Tabs(
-            [
-                dbc.Tab(label="Data Explorer", tab_id="data_explorer"),
-                dbc.Tab(label="Soil and Room Temperature", tab_id="temperature"),
-                dbc.Tab(label="Room Humidity and Light", tab_id="hum_and_light"),
-            ],
-            id="tabs",
-            active_tab="data_explorer",
-        ),
-        html.Div(id="tab-content", className="p-4"),], style=MAIN_STYLE)
-    ]
-)
+app.layout = main_html.layout(sidebar)
 
 @app.callback(
     Output("tab-content", "children"),
     [Input("tabs", "active_tab"), Input("store", "data")],
 )
-def render_tab_content(active_tab, data):
-    """
-    This callback takes the 'active_tab' property as input, as well as the
-    stored graphs, and renders the tab content depending on what the value of
-    'active_tab' is.
-    """
-    if active_tab and data is not None:
-        if active_tab == "data_explorer":
-            return dbc.Row(
-                [
-                dbc.Col(controls, md=4),
-                dbc.Col( dbc.Card([dcc.Graph(figure=data["data_explorer"])],style={"width": "auto"}), md=8),
-                ]
-            )
-        elif active_tab == "temperature":
-            return dbc.Row(
-                [
-                   dbc.Col( dbc.Card([dcc.Graph(figure=data["soil_temp_graph"])],style={"width": "auto"}), md=6),
-                    dbc.Col( dbc.Card([dcc.Graph(figure=data["air_temp_graph"])],style={"width": "auto"}), md=6),
-     
-                ]
-            )
-        elif active_tab == "hum_and_light":
-            return dbc.Row(
-                [   
-                    dbc.Col( dbc.Card([dcc.Graph(figure=data["humidity_graph"])],style={"width": "auto"}), md=6),
-                    dbc.Col( dbc.Card([dcc.Graph(figure=data["light_graph"])],style={"width": "auto"}), md=6),
-                ]
-            )
-    return "No tab selected"
-
-
 
 @app.callback(Output("store", "data"), [Input("button", "n_clicks")])
 def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
+    # This is our editable graph, you can change the parameters
     df = influx.querydata(graph_default["bucket"], graph_default["measurment"], "jay" )
     data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_measurement'])
-
+    # This is a hard coded graph
     df = influx.querydata(cloud_bucket, "soil_temp", "jay" )
     soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
 
@@ -163,6 +80,7 @@ def updateForumData(y, b):
 
 
 # Server call used to write sensor data to InfluxDB
+# The methods in this function are inside influx_helper.py
 @server.route("/write", methods = ['POST'])
 def write():
     user = users.authorize_and_get_user(request)
