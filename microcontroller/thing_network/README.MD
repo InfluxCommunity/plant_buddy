@@ -15,7 +15,7 @@ List of hardware required to recreate demo:
 - [DH11 Temperature Humidity Sensor](https://create.arduino.cc/projecthub/pibots555/how-to-connect-dht11-sensor-with-arduino-uno-f4d239)
 
 ### Hardware Wiring
-![Plant_Buddy_bb](/microcontroller/plant_buddy_v2_MKR_1310_bb.png)
+![Plant_Buddy_bb](plant_buddy_v2_MKR_1310_bb.png)
 
 
 ## Setup
