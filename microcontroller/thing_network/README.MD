@@ -6,7 +6,7 @@ This README will help guide you through the process or wiring and connecting a A
 ## Hardware List
 List of hardware required to recreate demo: 
 ### Control Board
-- [Arduino](https://store-usa.arduino.cc/products/arduino-mkr-wan-1310)
+- [Arduino-MKR-WAN-1310](https://store-usa.arduino.cc/products/arduino-mkr-wan-1310)
 
 ### Sensor List
 - [DS18B20 Temperature Sensor(Waterproof)](https://randomnerdtutorials.com/guide-for-ds18b20-temperature-sensor-with-arduino/)
