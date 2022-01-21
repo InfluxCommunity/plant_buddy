@@ -1,2 +1,3 @@
 src/secret_store.py
 src/secret/token.json
+.venv
