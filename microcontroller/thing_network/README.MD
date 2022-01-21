@@ -18,18 +18,43 @@ List of hardware required to recreate demo:
 ![Plant_Buddy_bb](plant_buddy_v2_MKR_1310_bb.png)
 
 
-## Setup
+## Hardware Setup
 1. Wire your WAN-1310 based on hardware wiring provided. Although not required I highly recommed using a breadboard, this saves you soldering the wires to the controller.
 2. Create a Thing Network account [here](https://account.thethingsnetwork.org/)
 3. Go to [applications](https://eu1.cloud.thethings.network/console/applications) and click create new application.
 4. Once you have created a new application, enter it and click on end devices.
 5. I now advise following the offical connection guide [here](https://docs.arduino.cc/tutorials/mkr-wan-1300/the-things-network)
-6. Once complete you can now edit [plant_buddy_arduino_MKR_1310](microcontroller/thing_network/plant_buddy_arduino_MKR_1310.ino). Change the following to fit your end device credentials:
+6. Once complete you can now edit [plant_buddy_arduino_MKR_1310](plant_buddy_arduino_MKR_1310.ino). Change the following to fit your end device credentials:
 ```cpp
 String appEui = "######";
 String appKey = "######";
 ```
 7. Load the project onto your WAN-1310
+
+## Thing Network -> Telegraf -> InfluxDB
+1. We are now ready to send our sensor data to InfluxDB. To start make sure you have an instance of [InfluxDB OSS](https://docs.influxdata.com/influxdb/v2.1/install/) installed or signed up for a free cloud tier of [InfluxDB Cloud](https://www.influxdata.com/products/influxdb-cloud/).
+2. Create a bucket called thing-network
+3. Install [Telegraf](https://docs.influxdata.com/telegraf/v1.21/introduction/downloading/) on your computer
+4. Head back to your application in Thing Network and go to: integrations -> MQTT
+5. generate a new api key (hold onto this)
+6. Modify the [MQTT input plugin](telegraf-mqtt-thing-network.conf) with your credentials
+```toml
+[[inputs.mqtt_consumer]]
+alias = "thing_network_consumer"
+
+
+
+  servers = ["tcp://eu1.cloud.thethings.network:1883"]
+  topics = ["#"]
+
+
+  username = "${THING_USERNAME}"
+  password = "${THING_API_KEY}" 
+  data_format = "json"
+  json_string_fields = ["uplink_message_frm_payload"]
+
+```
+7. Start your Telegraf service. 
 
 
 
