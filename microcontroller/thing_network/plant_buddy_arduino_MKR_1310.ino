@@ -1,4 +1,6 @@
 #include <MKRWAN_v2.h>
+//#include <MKRWAN.h>
+
 #include<stdlib.h>
 
 
@@ -9,8 +11,8 @@
 
 LoRaModem modem;
 
-String appEui = "######";
-String appKey = "######";
+String appEui = "2345434567534678";
+String appKey = "D6FE3DBB523F358DA1BBB3C4304B93F7";
 bool connected;
 int err_count;
 
@@ -32,7 +34,7 @@ const int wet = 295;
 void setup() {
   // put your setup code here, to run once:
   modem.begin(EU868);
-  delay(1000);      // apparently the murata dislike if this tempo is removed...
+  delay(5000);      // apparently the murata dislike if this tempo is removed...
   connected=false;
   err_count=0;
   
@@ -46,7 +48,6 @@ void setup() {
 }
 
 void loop() {
-  delay(10);
   int sensorVal = analogRead(moisturePin);
   int moistureSenorReading = map(sensorVal, wet, dry, 100, 0);
 
@@ -73,22 +74,25 @@ void loop() {
   sensorData["soil_temperature"] = soilTemperatureReading;
   sensorData["light"] = lightReading;
 
+
+
   String jsonString = JSON.stringify(sensorData);
   Serial.print("Sending: " + jsonString + " - ");
-  for (unsigned int i = 0; i < jsonString.length(); i++) {
-    Serial.print(jsonString[i] >> 4, HEX);
-    Serial.print(jsonString[i] & 0xF, HEX);
-   
-  }
   Serial.println();
+  String sensorString = String(moistureSenorReading) + "-" + String(airTemperatureReading) + "-" + String(humidityReading) + "-" + String(soilTemperatureReading) + "-" + String(lightReading);
+  char payload[sensorString.length()+1];
+  sensorString.toCharArray(payload, sensorString.length() +1);
+  Serial.print(payload);
   
 
   if ( !connected ) {
+    
     int ret=modem.joinOTAA(appEui, appKey);
     if ( ret ) {
       connected=true;
       modem.minPollInterval(60);
-      modem.setADR(true);  
+      modem.setPort(3);
+      modem.setADR(true);
       delay(100);          
       err_count=0;
     }
@@ -96,8 +100,10 @@ void loop() {
   if ( connected ) {
     int err=0;
     modem.beginPacket();
-    modem.print(jsonString);
-    err = modem.endPacket(false);
+     
+    modem.write(payload, sizeof(payload));
+    //modem.write(test, 5);
+    err = modem.endPacket(true);
     if ( err > 0 ) {
       // Confirmation not received - jam or coverage fault
       err_count++;
@@ -116,7 +122,15 @@ void loop() {
     }
   }
 
-  
+
+}
 
   delay(60000);
 }
+
+
+   return { payload: {"soil_moisture": parseFloat(sensors[0]),
+                      "air_temperature": parseFloat(sensors[1]),   
+                      "humidity": parseFloat(sensors[2]),
+                      "soil_temperature": parseFloat(sensors[3]),
+                      "light": parseFloat(sensors[4])}, };}
