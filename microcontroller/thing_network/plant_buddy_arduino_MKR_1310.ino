@@ -11,8 +11,8 @@
 
 LoRaModem modem;
 
-String appEui = "2345434567534678";
-String appKey = "D6FE3DBB523F358DA1BBB3C4304B93F7";
+String appEui = "";
+String appKey = "";
 bool connected;
 int err_count;
 
@@ -129,8 +129,3 @@ void loop() {
 }
 
 
-   return { payload: {"soil_moisture": parseFloat(sensors[0]),
-                      "air_temperature": parseFloat(sensors[1]),   
-                      "humidity": parseFloat(sensors[2]),
-                      "soil_temperature": parseFloat(sensors[3]),
-                      "light": parseFloat(sensors[4])}, };}
