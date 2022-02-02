@@ -7,7 +7,7 @@ from dash import html
 from dash.dependencies import Input, Output
 import plotly.express as px
 from influx_helper import influxHelper
-import nav
+import main_html
 
 
 server = Flask(__name__)
@@ -20,8 +20,6 @@ graph_default = {"_field":"air_temperature", "bucket": cloud_bucket}
 
 influx = influxHelper(cloud_org, cloud_bucket)
 
-
-
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
@@ -29,60 +27,10 @@ forumMea= influx.getMeasurements(cloud_bucket)
 forumBuckets = influx.getBuckets()
 
 # Creates a drop down forum which queries influx for both a list of buckets and fields
-controls = dbc.Card(
-    [
-
-                dbc.Label("Measurment"),
-                dcc.Dropdown(
-                    id="y-variable",
-                    options=[
-                        {"label": col, "value": col} for col in forumMea
-                    ],
-                    value="Select a measurment",
-                ),
-      
-
-                dbc.Label("Bucket"),
-                dcc.Dropdown(
-                    id="bucket",
-                    options=[
-                        {"label": col, "value": col} for col in forumBuckets
-                    ],
-                    value=graph_default["bucket"],
-                ),
-   
-    ],
-    body=True,
-)
-
-sidebar = nav.createNav()
-MAIN_STYLE = {
-    "margin-left": "4rem",
-    "margin-right": "2rem",
-    "padding": "2rem 2rem 2rem 8rem",
-    }
-
+controls = main_html.controls(forumMea,forumBuckets, graph_default)
+sidebar = main_html.createNav()
 # Main HTML / Bootstap structure for front end app
-app.layout = dbc.Container(
-    [
-        sidebar,
-        dbc.Container([
-        dcc.Store(id="store"),
-        html.H1("Plant Buddy Dashboard"),
-        html.Hr(),
-        # Add your new tabs hear.
-        dbc.Tabs(
-            [
-                dbc.Tab(label="Data Explorer", tab_id="data_explorer"),
-                dbc.Tab(label="Soil and Room Temperature", tab_id="temperature"),
-                dbc.Tab(label="Room Humidity and Light", tab_id="hum_and_light"),
-            ],
-            id="tabs",
-            active_tab="data_explorer",
-        ),
-        html.Div(id="tab-content", className="p-4"),], style=MAIN_STYLE)
-    ]
-)
+app.layout = main_html.layout(sidebar)
 
 @app.callback(
     Output("tab-content", "children"),
@@ -118,7 +66,6 @@ def render_tab_content(active_tab, data):
                 ]
             )
     return "No tab selected"
-
 
 
 @app.callback(Output("store", "data"), [Input("button", "n_clicks")])

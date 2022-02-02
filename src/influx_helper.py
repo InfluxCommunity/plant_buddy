@@ -57,10 +57,11 @@ class influxHelper:
                 buckets.append(record["name"])
         return buckets
 
+
+
     # Wrapper function used to query InfluxDB> Calls Flux script with paramaters. Data query to data frame.
-    def querydata(self, bucket, field, user) -> DataFrame:
-        query = open("../flux/graph.flux").read().format(bucket,user, field)
-        print(query)
+    def querydata(self, bucket, measurment, field) -> DataFrame:
+        query = open("../flux/graph.flux").read().format(bucket, measurment, field)
         result = self.query_api.query_data_frame(query, org=self.cloud_org)
         return result
     
