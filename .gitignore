@@ -1,3 +1,11 @@
+#token files
 src/secret_store.py
 src/secret/token.json
+
+# Folder view configuration files
+.DS_Store
+
+# Compiled Python files
+*.pyc
 .venv
+src/__pycache__/
