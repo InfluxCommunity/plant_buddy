@@ -28,7 +28,7 @@ class influxHelper:
         p = influxdb_client.Point(data["sensor_name"]).tag("user",data["user"]).tag("device_id",data["device"]).field("reading", int(data["value"]))
         self.write_api.write(bucket=self.cloud_bucket, org=self.cloud_org, record=p)
         print(p, flush=True)
-
+        
     # The parse line function formats the data object
     def parse_line(self, line, user_name):
         data = {"device" : line[:2],
@@ -57,11 +57,9 @@ class influxHelper:
                 buckets.append(record["name"])
         return buckets
 
-
-
     # Wrapper function used to query InfluxDB> Calls Flux script with paramaters. Data query to data frame.
     def querydata(self, bucket, measurment, field) -> DataFrame:
-        query = open("../flux/graph.flux").read().format(bucket, measurment, field)
+        query = open("../flux/graph.flux").read().format(bucket, field, measurment)
         result = self.query_api.query_data_frame(query, org=self.cloud_org)
         return result
     

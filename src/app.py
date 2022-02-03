@@ -26,16 +26,17 @@ user = users.authorize_and_get_user(request)
 forumMea= influx.getMeasurements(cloud_bucket)
 forumBuckets = influx.getBuckets()
 
-# Creates a drop down forum which queries influx for both a list of buckets and fields
-controls = main_html.controls(forumMea,forumBuckets, graph_default)
+# This is our html snippets from the main_html file
+controls =  main_html.controls(forumMea,forumBuckets, graph_default)
 sidebar = main_html.createNav()
-# Main HTML / Bootstap structure for front end app
 app.layout = main_html.layout(sidebar)
+
 
 @app.callback(
     Output("tab-content", "children"),
     [Input("tabs", "active_tab"), Input("store", "data")],
 )
+
 def render_tab_content(active_tab, data):
     """
     This callback takes the 'active_tab' property as input, as well as the
@@ -73,8 +74,8 @@ def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
 # This is our editable graph, you can change the parameters
     df = influx.querydata(graph_default["bucket"], graph_default["_field"], "eui-323932326d306512" )
-    print(df)
-    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['device_id'])
+    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_measurement'])
+    
      # This is a hard coded graph
     df = influx.querydata(cloud_bucket, "soil_moisture", "eui-323932326d306512" )
     soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
@@ -104,9 +105,6 @@ def updateForumData(y, b):
     graph_default["bucket"] = b
     graph_default["measurment"] = y
     return y
-
-
-
 
 
 # Server call used to write sensor data to InfluxDB
