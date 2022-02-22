@@ -9,16 +9,20 @@ import plotly.express as px
 from influx_helper import influxHelper
 import main_html
 
+url = "https://us-east-1-1.aws.cloud2.influxdata.com"
+cloud_org = "05ea551cd21fb6e4"
+cloud_bucket = "plantbuddy"
+
+
+influx = influxHelper(url, cloud_org, cloud_bucket)
 
 server = Flask(__name__)
 # Dashboard is built using plotly's dash package. This also includes bootstap styles from dash_bootstrap
 app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
-
-cloud_org = "05ea551cd21fb6e4"
-cloud_bucket = "plantbuddy"
 graph_default = {"_field":"air_temperature", "bucket": cloud_bucket}
 
-influx = influxHelper(cloud_org, cloud_bucket)
+
+
 
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
@@ -74,21 +78,22 @@ def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
 # This is our editable graph, you can change the parameters
     df = influx.querydata(graph_default["bucket"], graph_default["_field"], "eui-323932326d306512" )
-    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_measurement'])
+    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_field'])
     
      # This is a hard coded graph
     df = influx.querydata(cloud_bucket, "soil_moisture", "eui-323932326d306512" )
-    soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     df = influx.querydata(cloud_bucket, "air_temperature", "eui-323932326d306512" )
-    air_temp_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    air_temp_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     df = influx.querydata(cloud_bucket, "humidity", "eui-323932326d306512" )
-    humidity_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    humidity_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     #This queries our hard coded flux query
-    df = influx.querydataStatic()
-    light_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    # df = influx.querydataStatic()
+    df = influx.querydata(cloud_bucket, "light", "eui-323932326d306512" )
+    light_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     # save figures in a dictionary for sending to the dcc.Store
     return {"data_explorer": data_explorer, 
@@ -126,4 +131,4 @@ def notify():
     # TODO: check the authorization and actually notify the user
 
 if __name__ == '__main__':
-  app.run_server(host='0.0.0.0', port=5000, debug=True)
+  app.run_server(host='0.0.0.0', port=5001, debug=True)
