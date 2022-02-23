@@ -19,7 +19,7 @@ influx = influxHelper(url, cloud_org, cloud_bucket)
 server = Flask(__name__)
 # Dashboard is built using plotly's dash package. This also includes bootstap styles from dash_bootstrap
 app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
-graph_default = {"_field":"air_temperature", "bucket": cloud_bucket}
+graph_default = {"_field":"soil_moisture", "bucket": cloud_bucket}
 
 
 
@@ -81,7 +81,7 @@ def generate_graphs(n):
     data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_field'])
     
      # This is a hard coded graph
-    df = influx.querydata(cloud_bucket, "soil_moisture", "eui-323932326d306512" )
+    df = influx.querydata(cloud_bucket, "soil_temperature", "eui-323932326d306512" )
     soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     df = influx.querydata(cloud_bucket, "air_temperature", "eui-323932326d306512" )

@@ -8,3 +8,4 @@ token.json
 *.pyc
 
 .venv
+microcontroller/thing_network/.env
