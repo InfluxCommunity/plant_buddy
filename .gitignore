@@ -7,3 +7,6 @@ src/secret/token.json
 
 # Compiled Python files
 *.pyc
+
+.venv
+*token.json

@@ -6,7 +6,7 @@ from pandas.core.frame import DataFrame
 class influxHelper:
     def __init__(self, org, bucket) -> None:
         self.client = influxdb_client.InfluxDBClient(
-            url = "https://us-east-1-1.aws.cloud2.influxdata.com/",
+            url = "https://us-east-1-1.aws.cloud2.influxdata.com",
             token = secret_store.get_bucket_secret(),
             org = org,
             timeout = 30000
@@ -25,7 +25,11 @@ class influxHelper:
 
     # The write to influx function formats the data point then writes to the database
     def write_to_influx(self,data):
-        p = influxdb_client.Point(data["sensor_name"]).tag("user",data["user"]).tag("device_id",data["device"]).field("reading", int(data["value"]))
+        p = (influxdb_client.Point("sensor_data")
+                            .tag("user",data["user"])
+                            .tag("device_id",data["device"])
+                            .field(data["sensor_name"], int(data["value"])
+                            ))
         self.write_api.write(bucket=self.cloud_bucket, org=self.cloud_org, record=p)
         print(p, flush=True)
         
@@ -40,7 +44,7 @@ class influxHelper:
     # Getting our list of measurements for the dropdown in controls found in main_html.py
     def getMeasurements(self, bucket) -> list:
         measurments = []
-        query = open("../flux/measurments.flux").read().format(bucket)
+        query = open("flux/measurments.flux").read().format(bucket)
         result = self.query_api.query(query, org=self.cloud_org)
         for table in result:
             for record in table:
@@ -59,12 +63,12 @@ class influxHelper:
 
     # Wrapper function used to query InfluxDB> Calls Flux script with paramaters. Data query to data frame.
     def querydata(self, bucket, measurment, field) -> DataFrame:
-        query = open("../flux/graph.flux").read().format(bucket, field, measurment)
+        query = open("flux/graph.flux").read().format(bucket, field, measurment)
         result = self.query_api.query_data_frame(query, org=self.cloud_org)
         return result
     
     # Wrapper function used to query InfluxDB> Calls Flux script with no paramaters.
     def querydataStatic(self) -> DataFrame:
-        query = open("../flux/graph_static.flux").read()
+        query = open("flux/graph_static.flux").read()
         result = self.query_api.query_data_frame(query, org=self.cloud_org)
         return result
