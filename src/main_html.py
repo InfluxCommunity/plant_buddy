@@ -39,13 +39,13 @@ def controls(forumMea,forumBuckets, graph_default):
     control = dbc.Card(
         [
 
-                dbc.Label("Measurment"),
+                dbc.Label("Fields"),
                 dcc.Dropdown(
                     id="y-variable",
                     options=[
                         {"label": col, "value": col} for col in forumMea
                     ],
-                    value="Select a measurment",
+                    value="Select a Field",
                 ),
       
 

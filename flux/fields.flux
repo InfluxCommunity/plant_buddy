@@ -1,3 +1,3 @@
 import "influxdata/influxdb/schema"
 
-schema.measurements(bucket: "{}")
+schema.fieldKeys(bucket: "{}")

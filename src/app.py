@@ -16,14 +16,15 @@ app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.
 
 cloud_org = "05ea551cd21fb6e4"
 cloud_bucket = "plantbuddy"
-graph_default = {"_field":"air_temperature", "bucket": cloud_bucket}
+graph_default = {"_field":"air_temperature", "bucket": cloud_bucket, "deviceID": "01"}
+
 
 influx = influxHelper(cloud_org, cloud_bucket)
 
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
 user = users.authorize_and_get_user(request)
-forumMea= influx.getMeasurements(cloud_bucket)
+forumMea= influx.getFields(cloud_bucket)
 forumBuckets = influx.getBuckets()
 
 # This is our html snippets from the main_html file
@@ -73,22 +74,23 @@ def render_tab_content(active_tab, data):
 def generate_graphs(n):
 # Generate graphs based upon pandas data frame. 
 # This is our editable graph, you can change the parameters
-    df = influx.querydata(graph_default["bucket"], graph_default["_field"], "eui-323932326d306512" )
-    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_measurement'])
+    df = influx.querydata(bucket=graph_default["bucket"], sensor_name=graph_default["_field"], deviceID=graph_default["deviceID"] )
+    data_explorer = px.line(df, x="_time", y="_value", title= df.iloc[0]['_field'])
     
      # This is a hard coded graph
-    df = influx.querydata(cloud_bucket, "soil_moisture", "eui-323932326d306512" )
-    soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    df = influx.querydata(cloud_bucket, "soil_moisture", graph_default["deviceID"] )
+    soil_temp_graph = px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
-    df = influx.querydata(cloud_bucket, "air_temperature", "eui-323932326d306512" )
-    air_temp_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    df = influx.querydata(cloud_bucket, "air_temperature", graph_default["deviceID"] )
+    air_temp_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
-    df = influx.querydata(cloud_bucket, "humidity", "eui-323932326d306512" )
-    humidity_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+    df = influx.querydata(cloud_bucket, "humidity", graph_default["deviceID"] )
+    humidity_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     #This queries our hard coded flux query
-    df = influx.querydataStatic()
-    light_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_measurement'])
+   # df = influx.querydataStatic()
+    df = influx.querydata(cloud_bucket, "light", graph_default["deviceID"] )
+    light_graph= px.line(df, x="_time", y="_value", title=df.iloc[0]['_field'])
 
     # save figures in a dictionary for sending to the dcc.Store
     return {"data_explorer": data_explorer, 
@@ -103,7 +105,7 @@ def generate_graphs(n):
 @app.callback(Output("y-variable", "value"), [Input("y-variable", "value"), Input("bucket", "value")], prevent_initial_call=True)
 def updateForumData(y, b):
     graph_default["bucket"] = b
-    graph_default["measurment"] = y
+    graph_default["_field"] = y
     return y
 
 

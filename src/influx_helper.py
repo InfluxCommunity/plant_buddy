@@ -16,8 +16,8 @@ class influxHelper:
         self.cloud_bucket = bucket
         self.cloud_org = org
         # Ref to serial sensor samples. 
-        self.sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temp",
-                "AT":"air_temp", "SM":"soil_moisture"}
+        self.sensor_names = {"LI":"light", "HU":"humidity", "ST":"soil_temperature",
+                "AT":"air_temperature", "SM":"soil_moisture"}
 
         self.write_api = self.client.write_api()
         self.query_api = self.client.query_api()
@@ -42,9 +42,9 @@ class influxHelper:
         return data
 
     # Getting our list of measurements for the dropdown in controls found in main_html.py
-    def getMeasurements(self, bucket) -> list:
+    def getFields(self, bucket) -> list:
         measurments = []
-        query = open("flux/measurments.flux").read().format(bucket)
+        query = open("flux/fields.flux").read().format(bucket)
         result = self.query_api.query(query, org=self.cloud_org)
         for table in result:
             for record in table:
@@ -62,9 +62,9 @@ class influxHelper:
         return buckets
 
     # Wrapper function used to query InfluxDB> Calls Flux script with paramaters. Data query to data frame.
-    def querydata(self, bucket, measurment, field) -> DataFrame:
-        query = open("flux/graph.flux").read().format(bucket, field, measurment)
-        result = self.query_api.query_data_frame(query, org=self.cloud_org)
+    def querydata(self, bucket, sensor_name, deviceID) -> DataFrame:       
+        query = open("flux/graph.flux").read().format(bucket, deviceID, sensor_name)
+        result = self.query_api.query_data_frame(query, org=self.cloud_org )
         return result
     
     # Wrapper function used to query InfluxDB> Calls Flux script with no paramaters.
