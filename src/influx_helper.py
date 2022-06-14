@@ -1,4 +1,3 @@
-import secret_store
 import influxdb_client
 import pandas as pd
 from pandas.core.frame import DataFrame
