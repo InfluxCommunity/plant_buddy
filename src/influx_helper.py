@@ -4,10 +4,10 @@ import pandas as pd
 from pandas.core.frame import DataFrame
 
 class influxHelper:
-    def __init__(self, org, bucket) -> None:
+    def __init__(self, org, bucket, token, host="https://us-east-1-1.aws.cloud2.influxdata.com") -> None:
         self.client = influxdb_client.InfluxDBClient(
-            url = "https://us-east-1-1.aws.cloud2.influxdata.com",
-            token = secret_store.get_bucket_secret(),
+            url = host,
+            token = token,
             org = org,
             timeout = 30000
     )
