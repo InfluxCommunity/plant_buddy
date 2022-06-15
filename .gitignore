@@ -1,12 +1,11 @@
 #token files
-src/secret_store.py
-src/secret/token.json
+**/local_settings.py
+**/token.json
 
 # Folder view configuration files
-.DS_Store
+**/.DS_Store
 
 # Compiled Python files
 *.pyc
 
 .venv
-*token.json

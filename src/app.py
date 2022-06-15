@@ -11,15 +11,22 @@ import main_html
 
 
 server = Flask(__name__)
+# Load configurations
+server.config.from_object('default_settings')
+server.config.from_envvar('PLANTBUDDY_SETTINGS')
+
 # Dashboard is built using plotly's dash package. This also includes bootstap styles from dash_bootstrap
 app = app = dash.Dash(__name__, server=server, external_stylesheets=[dbc.themes.BOOTSTRAP], suppress_callback_exceptions=True)
 
-cloud_org = "05ea551cd21fb6e4"
-cloud_bucket = "plantbuddy"
+cloud_host = server.config['INFLUXDB_HOST']
+cloud_org = server.config['INFLUXDB_ORG']
+cloud_bucket = server.config['INFLUXDB_BUCKET']
+cloud_token = server.config['INFLUXDB_TOKEN']
+
 graph_default = {"_field":"air_temperature", "bucket": cloud_bucket, "deviceID": "01"}
 
 
-influx = influxHelper(cloud_org, cloud_bucket)
+influx = influxHelper(host=cloud_host, org=cloud_org, bucket=cloud_bucket, token=cloud_token)
 
 # Get user. Currently static refrence. Used to filter sensor data in InfluxDB
 # TODO change this to login in page. 
