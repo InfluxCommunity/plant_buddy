@@ -22,31 +22,31 @@ or
 ### Hardware Wiring
 ![Plant_Buddy_bb](/microcontroller/plant_buddy_arduino.png)
 
+## Installation
+For development and testing it's easiest to create a python virtual environment where you can install Plantbuddy's dependencies:
+```
+virtualenv --python=python3 ./venv
+./venv/bin/pip install -r requirements.txt
+```
 
 ## Setup
-When setting up the project you will need to add a secret folder in src and add your token in a token.json file like so:
+When setting up the project you will need to add your InfluxDB authentication information. You can do this by making a copy of the `default_settings.py` file and changing the values it contains.
+
 ```
-{"token":"imatokensupersecret"}
+cp ./src/default_settings.py ./src/local_settings.py
 ```
 
-You will want to edit the line in secret_store.py:
-```
-f = open ('/myfilestructure/plant-buddy/src/secret/token.json', "r")
-```
+Later you will tell the server which settings to use with the `PLANTBUDDY_SETTINGS` environment variable.
+
 You might need to change the port in serial_read.py depending on the device you are using:
 ```
 port = '/dev/tty.usbmodem141101'
 ```
 
-in app.py you will want to add your own org and bucket:
+To run the project:
 ```
-cloud_org = "yourorgid"
-cloud_bucket = "yourbucket"
-```
-
-To run the project you want to run from the src file:
-```
-python3 app.py
+export PLANTBUDDY_SETTINGS=local_settings.py 
+./venv/bin/python ./src/app.py
 ```
 
 
