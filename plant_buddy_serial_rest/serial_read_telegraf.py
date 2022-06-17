@@ -22,11 +22,11 @@ def jsondata(sensordata):
 
 def parse_line(line, user_name):
     if line[4:].rstrip() != "ERR":
-        data = {"device" : line[:2],
+        data = {"device_id" : line[:2],
                 sensor_names.get(line[2:4], "unkown") : int(line[4:].rstrip()) ,
                 "user": user_name}
     else:
-        data = {"device" : line[:2],
+        data = {"device_id" : line[:2],
                  sensor_names.get(line[2:4], "unkown"): int(0),
                 "user": user_name}
     return data
