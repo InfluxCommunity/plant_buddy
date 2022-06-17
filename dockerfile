@@ -1,14 +1,17 @@
 # python:alpine is 3.{latest}
-FROM python:buster 
+FROM python:3
 
-RUN pip install flask
-RUN pip install influxdb-client
-RUN pip install matplotlib
-RUN pip install mpld3
-
-COPY src /app/
-
-EXPOSE 5000
+RUN mkdir app 
 WORKDIR /app
+RUN mkdir app src flux
+COPY requirements.txt .
+COPY ./src ./src
+COPY ./flux ./flux
 
-ENTRYPOINT ["python", "app.py"]
+RUN pip install --no-cache-dir -r requirements.txt
+
+
+
+
+EXPOSE 5001
+ENTRYPOINT ["python", "./src/app.py"]

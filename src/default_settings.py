@@ -1,5 +1,5 @@
 
-INFLUXDB_HOST = 'http://localhost:8086'
-INFLUXDB_ORG = '<replace with your influxdb org ID>'
-INFLUXDB_BUCKET = 'plantbuddy'
-INFLUXDB_TOKEN = '<replace with your influxdb token>'
+INFLUXDB_HOST = 'https://us-east-1-1.aws.cloud2.influxdata.com'
+INFLUXDB_ORG = 'cloud_org'
+INFLUXDB_BUCKET = 'cloud_bucket'
+INFLUXDB_TOKEN = 'cloud_token'
