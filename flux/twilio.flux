@@ -24,7 +24,7 @@ task_data =
         |> range(start: tasks.lastSuccess(orTime: -1h))
         |> filter(fn: (r) => r["_measurement"] == "sensor_data")
         |> filter(fn: (r) => r["_field"] == "soil_moisture")
-trigger = (r) => r["soil_moisture"] < 100
+trigger = (r) => r["soil_moisture"] < 30
 messageFn = (r) =>
     " ${time(v: r._source_timestamp)} Your plant is getting thirsty. Moisture Level is at: ${r.soil_moisture}% !"
 

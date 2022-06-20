@@ -24,6 +24,19 @@ services:
       - plantbuddy
     environment:
       - PLANTBUDDY_SETTINGS=default_settings.py 
+# Linux only. Will not work on MAC due to incompatability to mount USB devices
+  #telegraf:
+   # image: telegraf-plantbuddy:latest
+    #networks:
+     # - plantbuddy
+    #volumes:
+     # - ./docker/telegraf/telegraf.conf:/etc/telegraf/telegraf.conf:ro
+     # - ./docker/telegraf/serial_read_telegraf.py:/app/serial_read_telegraf.py
+     # environment:
+     # - SERIAL_PORT=/dev/cu.usbmodem143301
+    # devices:
+    #  - "/dev/cu.usbmodem143301:/dev/cu.usbmodem143301"
+    #privileged: true
 networks: 
   plantbuddy:
     name: plantbuddy

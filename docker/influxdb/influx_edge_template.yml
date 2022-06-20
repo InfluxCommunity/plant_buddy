@@ -1,0 +1,176 @@
+apiVersion: influxdata.com/v2alpha1
+kind: Label
+metadata:
+    name: laughing-torvalds-fb2001
+spec:
+    color: '#006f49'
+    name: plantbuddy
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: relaxed-nash-fb2005
+spec:
+    associations:
+      - kind: Label
+        name: laughing-torvalds-fb2001
+    name: downsampled
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Bucket
+metadata:
+    name: shiny-galois-fb2009
+spec:
+    associations:
+      - kind: Label
+        name: laughing-torvalds-fb2001
+    name: plantbuddy
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Task
+metadata:
+    name: rustic-dijkstra-fb200d
+spec:
+    associations:
+      - kind: Label
+        name: laughing-torvalds-fb2001
+    every: 1m
+    name: downsample
+    offset: 5s
+    query: |-
+        import "influxdata/influxdb/tasks"
+
+
+
+        from(bucket: "plantbuddy")
+            |> range(start: tasks.lastSuccess(orTime: -1h))
+            |> filter(fn: (r) => r["_field"] != "generatorID")
+            |> aggregateWindow(every: 1m, fn: mean, createEmpty: false)
+            |> set(key: "gatewayID", value: "greenhouse156")
+            |> to(bucket: "downsampled")
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Variable
+metadata:
+    name: jolly-benz-fb2011
+spec:
+    associations:
+      - kind: Label
+        name: laughing-torvalds-fb2001
+    language: flux
+    name: buckets
+    query: |-
+        buckets()
+          |> filter(fn: (r) => r.name !~ /^_/)
+          |> rename(columns: {name: "_value"})
+          |> keep(columns: ["_value"])
+    type: query
+---
+apiVersion: influxdata.com/v2alpha1
+kind: Dashboard
+metadata:
+    name: amusing-sammet-3b2001
+spec:
+    associations:
+      - kind: Label
+        name: laughing-torvalds-fb2001
+    charts:
+      - axes:
+          - base: "10"
+            name: x
+            scale: linear
+          - base: "10"
+            name: "y"
+            scale: linear
+        colorizeRows: true
+        colors:
+          - hex: '#31C0F6'
+            id: 86ebc62e-4984-4a52-ae4d-e67b2aac4a9d
+            name: Nineteen Eighty Four
+            type: scale
+          - hex: '#A500A5'
+            id: 112c6417-78fa-4088-bcf9-8a98e4ac28db
+            name: Nineteen Eighty Four
+            type: scale
+          - hex: '#FF7E27'
+            id: 14a336e5-1891-4a2e-9b2b-e1f6fabc584b
+            name: Nineteen Eighty Four
+            type: scale
+        geom: line
+        height: 4
+        hoverDimension: auto
+        kind: Xy
+        legendColorizeRows: true
+        legendOpacity: 1
+        legendOrientationThreshold: 1e+08
+        name: Raw Sensor Data
+        opacity: 1
+        orientationThreshold: 1e+08
+        position: overlaid
+        queries:
+          - query: |-
+                from(bucket: "plantbuddy")
+                  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                  |> filter(fn: (r) => r["_measurement"] == "sensor_data")
+                  |> filter(fn: (r) => r["_field"] == "soil_moisture")
+                  |> yield(name: "raw")
+        staticLegend:
+            colorizeRows: true
+            opacity: 1
+            orientationThreshold: 1e+08
+            widthRatio: 1
+        width: 12
+        widthRatio: 1
+        xCol: _time
+        yCol: _value
+      - axes:
+          - base: "10"
+            name: x
+            scale: linear
+          - base: "10"
+            name: "y"
+            scale: linear
+        colorizeRows: true
+        colors:
+          - hex: '#74D495'
+            id: c6afb04e-f027-47b8-8417-00ecf5c4a913
+            name: Atlantis
+            type: scale
+          - hex: '#3F3FBA'
+            id: 0873d56e-200a-41b8-a250-e9b09403d2eb
+            name: Atlantis
+            type: scale
+          - hex: '#FF4D9E'
+            id: c9f27fa9-f1b8-4cc1-970c-eb595ba9da0b
+            name: Atlantis
+            type: scale
+        geom: line
+        height: 4
+        hoverDimension: auto
+        kind: Xy
+        legendColorizeRows: true
+        legendOpacity: 1
+        legendOrientationThreshold: 1e+08
+        name: 'Downsampled Sensor Data '
+        opacity: 1
+        orientationThreshold: 1e+08
+        position: overlaid
+        queries:
+          - query: |-
+                from(bucket: "downsampled")
+                  |> range(start: v.timeRangeStart, stop: v.timeRangeStop)
+                  |> filter(fn: (r) => r["_measurement"] == "sensor_data")
+                  |> filter(fn: (r) => r["_field"] == "soil_moisture")
+                  |> yield(name: "downsampled")
+        staticLegend:
+            colorizeRows: true
+            opacity: 1
+            orientationThreshold: 1e+08
+            widthRatio: 1
+        width: 12
+        widthRatio: 1
+        xCol: _time
+        yCol: _value
+        yPos: 4
+    description: Show data downsampling
+    name: Downsample Checker
