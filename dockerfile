@@ -4,7 +4,7 @@ FROM python:3
 RUN mkdir app 
 WORKDIR /app
 RUN mkdir app src flux
-COPY requirements.txt .
+COPY docker/requirements.txt .
 COPY ./src ./src
 COPY ./flux ./flux
 
