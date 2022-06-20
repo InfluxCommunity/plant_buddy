@@ -1,4 +1,4 @@
-# Plant Buddy with Dash
+# Plant Buddy (Edge to Cloud Demo)
 
 This demo is based of the [Plant Buddy IoT project](https://github.com/rickspencer3/plant-buddy) created by Rick Spencer. 
 
@@ -23,6 +23,7 @@ or
 ![Plant_Buddy_bb](/microcontroller/plant_buddy_arduino.png)
 
 ## Installation
+** note finish **
 For development and testing it's easiest to create a python virtual environment where you can install Plantbuddy's dependencies:
 ```
 virtualenv --python=python3 ./venv
@@ -47,6 +48,20 @@ To run the project:
 ```
 export PLANTBUDDY_SETTINGS=local_settings.py 
 ./venv/bin/python ./src/app.py
+```
+
+### Edge to Cloud Replication
+This section will teach you how to configure InfluxDB OSS to send data to InfluxDB Cloud.
+
+1. Create a remote connection
+
+```bash
+influx remote create --name plant-buddy-cloud --remote-url https://us-east-1-1.aws.cloud2.influxdata.com --remote-org-id <ORG_ID> --remote-api-token <CLOUD_TOKEN>
+```
+
+2. Create a replication between a local bucket and a cloud bucket
+```bash
+influx replication create --local-bucket-id 1f158076adc417f5 --remote-bucket-id 621a1bf27327b2fc --remote-id 0947082f21c3e000  --name edge_to_cloud
 ```
 
 
