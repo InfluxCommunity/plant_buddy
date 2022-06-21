@@ -63,11 +63,14 @@ class influxHelper:
     # Wrapper function used to query InfluxDB> Calls Flux script with paramaters. Data query to data frame.
     def querydata(self, bucket, sensor_name, deviceID) -> DataFrame:       
         query = open("flux/graph.flux").read()
+        if sensor_name == None or sensor_name == "None" :
+            sensor_name = "soil_moisture"
         params = {
             '_bucket': bucket,
             '_sensor': sensor_name,
             '_device': deviceID
         }
+
         result = self.query_api.query_data_frame(query, org=self.cloud_org, params=params )
         return result
     

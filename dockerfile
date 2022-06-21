@@ -1,5 +1,5 @@
 # python:alpine is 3.{latest}
-FROM python:3
+FROM python:3.9
 
 RUN mkdir app 
 WORKDIR /app
@@ -8,6 +8,8 @@ COPY docker/requirements.txt .
 COPY ./src ./src
 COPY ./flux ./flux
 
+
+RUN pip install --upgrade pip
 RUN pip install --no-cache-dir -r requirements.txt
 
 
