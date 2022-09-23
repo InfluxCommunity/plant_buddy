@@ -10,3 +10,5 @@
 
 .venv
 .env
+
+src/default_settings.py

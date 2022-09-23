@@ -5,7 +5,7 @@
 // _device = "01"
 
 from(bucket: _bucket)
-    |> range(start: -24h)
+    |> range(start: -12h)
     |> filter(fn: (r) => r["_measurement"] == "sensor_data")
     |> filter(fn: (r) => r["device_id"] == _device)
     |> filter(fn: (r) => r["_field"] == _sensor)
