@@ -1,3 +1,7 @@
+# IOX Version (February 2023)
+
+For those looking for the [IOX](https://github.com/InfluxCommunity/plant_buddy_iox) version of this project
+
 # Plant Buddy with Dash
 
 This demo is based of the [Plant Buddy IoT project](https://github.com/rickspencer3/plant-buddy) created by Rick Spencer. 
